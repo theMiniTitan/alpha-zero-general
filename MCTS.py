@@ -36,7 +36,7 @@ class MCTS():
 
         boardState = self.game.stringRepresentation(canonicalBoard)
         counts = []
-        for action in range(self.game.getActionSize):
+        for action in range(self.game.getActionSize()):
             if(boardState, action) in self.NStateAction:
                 counts.append(self.NStateAction[(boardState, action)])
             else:
@@ -71,9 +71,9 @@ class MCTS():
         Returns:
             v: the negative of the value of the current canonicalBoard
         """
-        boardState = self.game.stringRepresentation(canonicalBoard, 1)
+        boardState = self.game.stringRepresentation(canonicalBoard)
 
-        # check if the boardstate has been seem before
+        # check if the boardstate has been seen before
         if boardState not in self.Es:
             # note we've seen this board before
             self.Es[boardState] = self.game.getGameEnded(canonicalBoard, 1)
@@ -86,9 +86,8 @@ class MCTS():
             valids = self.game.getValidMoves(canonicalBoard, 1)
             self.nnetPolicy[boardState] = self.nnetPolicy[boardState] * valids  # only want valid moves
             # check if move vector is normalised
-            sum_Ps_s = np.sum(self.nnetPolicy[boardState])
 
-            self.nnetPolicy[boardState] /= sum_Ps_s  # renormalize
+            self.nnetPolicy[boardState] /= np.sum(self.nnetPolicy[boardState])  # renormalize
             self.validMoves[boardState] = valids
             self.NState[boardState] = 0
             return -v
@@ -105,9 +104,9 @@ class MCTS():
                         action] * math.sqrt(self.NState[boardState]) / (1 + self.NStateAction[(boardState, action)])
                 else:
                     u = self.args.cpuct * self.nnetPolicy[boardState][action] * math.sqrt(self.NState[boardState] + EPS)
-            if u > curBest:
-                curBest = u
-                bestAction = action
+                if u > curBest:
+                    curBest = u
+                    bestAction = action
 
         nextState, nextPlayer = self.game.getNextState(canonicalBoard, 1, bestAction)
         nextState = self.game.getCanonicalForm(nextState, nextPlayer)
